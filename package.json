@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "should": "^13.1.2"
+  },
+  "dependencies": {
+    "mocha": "^4.0.1"
   }
 }
