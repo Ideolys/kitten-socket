@@ -7,16 +7,14 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha --growl -t 100000 -w -b"
+    "test": "mocha --growl -t 10000 -b"
   },
   "repository": {
     "type": "git",
     "url": "git@git.ideolys.com:ideolys/kitten-socket.git"
   },
   "devDependencies": {
-    "should": "^13.1.2"
-  },
-  "dependencies": {
+    "should": "^13.1.2",
     "mocha": "^4.0.1"
   }
 }

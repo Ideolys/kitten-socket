@@ -4,6 +4,7 @@ const spawn  = require('child_process').spawn;
 const Socket = require('../lib/socket');  
 const should = require('should');
 const path   = require('path');
+const helper = require('../lib/helper');
 let server;
 
 describe('Socket', function () {
@@ -540,6 +541,52 @@ describe('Socket', function () {
         });
       });
     });*/
+  });
+
+  describe.only('server', function () {
+    describe('registration', function () {
+      
+      it ('should not register a client if no uid', function (done) {
+        const _server = new Socket(4000, '127.0.0.1');
+        const _client = new Socket(4000, '127.0.0.1');
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            should(packet.data.type).eql('ERROR');
+            should(packet.data.message).eql('No uid defined!');
+            _client.stop(function() {
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
+      it ('should not register a client if the same uid has been already used', function (done) {
+        const _server  = new Socket(4000, '127.0.0.1');
+        const _uid     = helper.getUID();
+        const _client1 = new Socket(4000, '127.0.0.1', _uid);
+        const _client2 = new Socket(4000, '127.0.0.1', _uid);
+  
+        _server.startServer(function () {
+          _client1.startClient(function () {
+            _client2.startClient();
+
+            _client2.on('message', function (packet) {
+              should(packet.data.type).eql('ERROR');
+              should(packet.data.message).eql('uid already defined!');
+              _client1.stop(function() {
+                _client2.stop(function() {
+                  _server.stop(done);
+                });
+              });
+            });
+          });
+        });
+      });
+
+    });
   });
 });
 
