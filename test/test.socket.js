@@ -587,7 +587,7 @@ describe('Socket', function () {
         const _uid     = helper.getUID();
         const _client1 = new Socket(4000, '127.0.0.1', { uid : _uid });
         const _client2 = new Socket(4000, '127.0.0.1', { uid : _uid });
-  
+        
         _server.startServer(function () {
           _client1.startClient(function () {
             _client2.startClient();
@@ -694,6 +694,44 @@ describe('Socket', function () {
                 _server.stop(done);
               });
             });
+          }, 100);
+        });
+      });
+
+      it('should send the packets saved when socket was not connected', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', { 
+          logsDirectory : 'logs', 
+          logsFilename  : 'packets.log' 
+        });
+        const _client          = new Socket(4000, '127.0.0.1', { uid : _uid });
+        var _nbPacketsReceived = 0;
+  
+        _server.startServer(function () {
+          _server.sendFromServer(_uid, { key : 'value' });
+          _server.sendFromServer(_uid, { key : 'anotherValue' });
+
+          setTimeout(function () {
+            _client.startClient(function () {
+
+              _client.on('message', function (packet) {
+                if (packet.data.type === 'REGISTER') {
+                  return;
+                }
+
+                _nbPacketsReceived++;
+                if (_nbPacketsReceived === 2) {
+
+                  var _fileData = fs.readFileSync(path.join(process.cwd(), 'logs', 'packets.log')).toString();
+                  should(_fileData).eql('');
+
+                  _client.stop(function () {
+                    _server.stop(done);
+                  });
+                }
+              });
+            });
+            
           }, 100);
         });
       });
