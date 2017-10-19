@@ -564,14 +564,17 @@ describe('Socket', function () {
       });
 
       it ('should register a client', function (done) {
+        const _uid    = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1');
-        const _client = new Socket(4000, '127.0.0.1', helper.getUID());
+        const _client = new Socket(4000, '127.0.0.1', { uid : _uid });
   
         _server.startServer(function () {
           _client.startClient();
   
           _client.on('message', function (packet) {
             should(packet.data.type).eql('REGISTER');
+            should(_server._clients.length).eql(1);
+            should(_server._clients[0].uid).eql(_uid);
             _client.stop(function() {
               _server.stop(done);
             });
@@ -582,8 +585,8 @@ describe('Socket', function () {
       it ('should not register a client if the same uid has been already used', function (done) {
         const _server  = new Socket(4000, '127.0.0.1');
         const _uid     = helper.getUID();
-        const _client1 = new Socket(4000, '127.0.0.1', _uid);
-        const _client2 = new Socket(4000, '127.0.0.1', _uid);
+        const _client1 = new Socket(4000, '127.0.0.1', { uid : _uid });
+        const _client2 = new Socket(4000, '127.0.0.1', { uid : _uid });
   
         _server.startServer(function () {
           _client1.startClient(function () {
@@ -603,8 +606,106 @@ describe('Socket', function () {
       });
 
     });
+
+    describe('send', function () {
+
+      beforeEach(function (done) {
+        clearPacketsLog();
+        done();
+      });
+
+      it('should send a packet if the client is connected', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1');
+        const _client = new Socket(4000, '127.0.0.1', { uid : _uid });
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            if (packet.data.type === 'REGISTER') {
+              _server.sendFromServer(_uid, { key : 'value' });
+              return;
+            }
+            
+            should(packet.data.key).eql('value');
+            _client.stop(function() {
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
+      it('should write the packet to the disk if the socket is not connected', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', { 
+          logsDirectory : 'logs', 
+          logsFilename  : 'packets.log' 
+        });
+  
+        _server.startServer(function () {
+          _server.sendFromServer(_uid, { key : 'value' });
+          _server.sendFromServer(_uid, { key : 'anotherValue' });
+
+          setTimeout(function () {
+            var _fileData = fs.readFileSync(path.join(process.cwd(), 'logs', 'packets.log'));
+            _fileData     = _fileData.toString().split('\n');
+  
+            should(_fileData.length).eql(3);
+            should(_fileData[0]).eql('{"uid":"' + _uid + '","data":{"key":"value"}}');
+            should(_fileData[1]).eql('{"uid":"' + _uid + '","data":{"key":"anotherValue"}}');
+            should(_fileData[2]).eql('');
+            _server.stop(done);
+          }, 100);
+        });
+      });
+
+      it('should write the packet to the disk if the socket is not connected and send packet to connected socket', function (done) {
+        const _uid       = helper.getUID();
+        const _uidClient = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', { 
+          logsDirectory : 'logs', 
+          logsFilename  : 'packets.log' 
+        });
+        const _client = new Socket(4000, '127.0.0.1', { uid : _uidClient });
+  
+        _server.startServer(function () {
+          _server.sendFromServer(_uid, { key : 'value' });
+          _server.sendFromServer(_uid, { key : 'anotherValue' });
+
+          setTimeout(function () {
+            _client.startClient();
+            _client.on('message', function (packet) {
+              if (packet.data.type === 'REGISTER') {
+                _server.sendFromServer(_uidClient, { car : 'Tesla' });
+                return;
+              }
+
+              should(packet.data.car).eql('Tesla');
+
+              var _fileData = fs.readFileSync(path.join(process.cwd(), 'logs', 'packets.log'));
+              _fileData     = _fileData.toString().split('\n');
+    
+              should(_fileData.length).eql(3);
+              should(_fileData[0]).eql('{"uid":"' + _uid + '","data":{"key":"value"}}');
+              should(_fileData[1]).eql('{"uid":"' + _uid + '","data":{"key":"anotherValue"}}');
+              should(_fileData[2]).eql('');
+              _client.stop(function () {
+                _server.stop(done);
+              });
+            });
+          }, 100);
+        });
+      });
+
+    });
   });
 });
+
+function clearPacketsLog () {
+  var _file = path.join(process.cwd(), 'logs', 'packets.log');
+  fs.writeFileSync(_file, '');
+}
 
 function executeServer (filename, callback) {
   server = spawn(path.join(__dirname,'socket', filename+'.js'), [], {cwd : __dirname});
