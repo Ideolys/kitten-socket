@@ -28,6 +28,10 @@ describe('Socket', function () {
           _client.send('1# hello, Im the client');
         });
         _client.on('message', function (messageFromServer) {
+          if (messageFromServer.data.type) {
+            return;
+          }
+
           should(messageFromServer.data).eql('Hi, Im the server, Im the boss, the client is not the king here! So listen to me');
           _client.stop(function () {
             _server.stop(done);
@@ -35,6 +39,10 @@ describe('Socket', function () {
         });
       });
       _server.on('message', function (messageFromClient) {
+        if (messageFromClient.data.type) {
+          return;
+        }
+
         should(messageFromClient.data).eql('1# hello, Im the client');
         messageFromClient.send('Hi, Im the server, Im the boss, the client is not the king here! So listen to me');
       });
@@ -57,6 +65,9 @@ describe('Socket', function () {
           _client.send(_objTransmitted);
         });
         _client.on('message', function (messageFromServer) {
+          if (messageFromServer.data.type) {
+            return;
+          }
           should(messageFromServer.data).eql(_objTransmitted);
           _client.stop(function () {
             _server.stop(done);
@@ -64,6 +75,9 @@ describe('Socket', function () {
         });
       });
       _server.on('message', function (messageFromClient) {
+        if (messageFromClient.data.type) {
+          return;
+        }
         should(messageFromClient.data).eql(_objTransmitted);
         messageFromClient.data = 1000000; // check the data is really transmitted
         messageFromClient.send(_objTransmitted);
@@ -81,6 +95,9 @@ describe('Socket', function () {
       });
       var _received = 0;
       _server.on('message', function (messageFromClient) {
+        if (messageFromClient.data.type) {
+          return;
+        }
         should(messageFromClient.data).eql('my super message which must leave now '+_received);
         _received++;
         if (_received === 3) {
@@ -92,8 +109,8 @@ describe('Socket', function () {
     });
     it('should send a message and get a response from the server in the callback even if the packet are queued', function (done) {
       executeServer('response', function () {
-        var _client = null;
-        var _nbError = 0;
+        var _client     = null;
+        var _nbError    = 0;
         var _nbReceived = 0;
         _client = new Socket(4000, '127.0.0.1');
         _client.startClient(); 
@@ -266,6 +283,9 @@ describe('Socket', function () {
           },6);
         });
         _client1.on('message', function (messageFromServer) {
+          if (messageFromServer.data.type) {
+            return;
+          }
           _nbMessageReceivedClientSide.client1++;
           should(messageFromServer.data).eql('client1');
         });
@@ -277,6 +297,9 @@ describe('Socket', function () {
           },7);
         });
         _client2.on('message', function (messageFromServer) {
+          if (messageFromServer.data.type) {
+            return;
+          }
           _nbMessageReceivedClientSide.client2++;
           should(messageFromServer.data).eql('client2');
         });
@@ -288,11 +311,17 @@ describe('Socket', function () {
           },11);
         });
         _client3.on('message', function (messageFromServer) {
+          if (messageFromServer.data.type) {
+            return;
+          }
           _nbMessageReceivedClientSide.client3++;
           should(messageFromServer.data).eql('client3');
         });
       });
       _server.on('message', function (messageFromClient) {
+        if (messageFromClient.data.type) {
+          return;
+        }
         _nbMessageReceivedServerSide[messageFromClient.data]++;
         messageFromClient.send(messageFromClient.data);
       });
@@ -339,7 +368,10 @@ describe('Socket', function () {
       _client.on('close', function () {
         _nbClose++;
       });
-      _client.on('message', function () {
+      _client.on('message', function (messageFromServer) {
+        if (messageFromServer.data.type) {
+          return;
+        }
         _nbReceived++;
       });
       executeServer('simple', function () {
@@ -414,6 +446,10 @@ describe('Socket', function () {
             });
           });
           _server.on('message', function (message) {
+            if (message.data.type) {
+              return;
+            }
+
             should(message.data).eql("I'm a #sharp# message !");
             _client.stop(function () {
               fs.unlinkSync(_serverPrivKey);
@@ -488,6 +524,10 @@ describe('Socket', function () {
               },100);
             });
             function receiver (message) {
+              if (message.data.type) {
+                return;
+              }
+
               _nbMessageReceived++;
               should(message.data).eql("I'm a message to "+message.uid);
               if (_nbMessageReceived >= 10) {
@@ -543,10 +583,10 @@ describe('Socket', function () {
     });*/
   });
 
-  describe.only('server', function () {
+  describe('server', function () {
     describe('registration', function () {
       
-      it ('should not register a client if no uid', function (done) {
+      it ('should register a client if no uid defined', function (done) {
         const _server = new Socket(4000, '127.0.0.1');
         const _client = new Socket(4000, '127.0.0.1');
   
@@ -554,8 +594,7 @@ describe('Socket', function () {
           _client.startClient();
   
           _client.on('message', function (packet) {
-            should(packet.data.type).eql('ERROR');
-            should(packet.data.message).eql('No uid defined!');
+            should(packet.data.type).eql('REGISTERED');
             _client.stop(function() {
               _server.stop(done);
             });
@@ -572,7 +611,7 @@ describe('Socket', function () {
           _client.startClient();
   
           _client.on('message', function (packet) {
-            should(packet.data.type).eql('REGISTER');
+            should(packet.data.type).eql('REGISTERED');
             should(_server._clients.length).eql(1);
             should(_server._clients[0].uid).eql(_uid);
             _client.stop(function() {
@@ -623,7 +662,7 @@ describe('Socket', function () {
           _client.startClient();
   
           _client.on('message', function (packet) {
-            if (packet.data.type === 'REGISTER') {
+            if (packet.data.type === 'REGISTERED') {
               _server.sendFromServer(_uid, { key : 'value' });
               return;
             }
@@ -660,7 +699,7 @@ describe('Socket', function () {
         });
       });
 
-      it('should write the packet to the disk if the socket is not connected and send packet to connected socket', function (done) {
+      it('should write the packet to the disk if the socket is not connected and send packet to the connected socket', function (done) {
         const _uid       = helper.getUID();
         const _uidClient = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1', { 
@@ -676,7 +715,7 @@ describe('Socket', function () {
           setTimeout(function () {
             _client.startClient();
             _client.on('message', function (packet) {
-              if (packet.data.type === 'REGISTER') {
+              if (packet.data.type === 'REGISTERED') {
                 _server.sendFromServer(_uidClient, { car : 'Tesla' });
                 return;
               }
@@ -698,7 +737,7 @@ describe('Socket', function () {
         });
       });
 
-      it('should send the packets saved when socket was not connected', function (done) {
+      it('should send the saved packets when socket was not connected', function (done) {
         const _uid    = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1', { 
           logsDirectory : 'logs', 
@@ -715,7 +754,7 @@ describe('Socket', function () {
             _client.startClient(function () {
 
               _client.on('message', function (packet) {
-                if (packet.data.type === 'REGISTER') {
+                if (packet.data.type === 'REGISTERED') {
                   return;
                 }
 
