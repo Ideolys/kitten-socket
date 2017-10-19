@@ -736,6 +736,54 @@ describe('Socket', function () {
         });
       });
 
+      it('should send in the correct order the packets saved when sockets were not connected', function (done) {
+        const _uidClient1 = helper.getUID();
+        const _uidClient2 = helper.getUID();
+        const _server     = new Socket(4000, '127.0.0.1', { 
+          logsDirectory : 'logs', 
+          logsFilename  : 'packets.log' 
+        });
+        const _client1         = new Socket(4000, '127.0.0.1', { uid : _uidClient1 });
+        const _client2         = new Socket(4000, '127.0.0.1', { uid : _uidClient2 });
+        
+        var _nbPacketsReceivedClient1 = 0;
+        var _nbPacketsReceivedClient2 = 0;
+
+        _server.startServer(function () {
+          _server.sendFromServer(_uidClient2, { key : 'value' });
+          _server.sendFromServer(_uidClient1, { key : 'anotherValue' });
+          _server.sendFromServer(_uidClient2, { key : '2' });
+
+          setTimeout(function () {
+            _client1.startClient();
+            _client1.on('message', function (packet) {
+              _nbPacketsReceivedClient1++;
+            });
+            _client2.startClient();
+            _client2.on('message', function (packet) {
+              _nbPacketsReceivedClient2++;
+
+              if (_nbPacketsReceivedClient2 === 2) {
+                should(packet.data.key).eql('value');
+              }
+              if (_nbPacketsReceivedClient2 === 3) {
+                should(packet.data.key).eql('2');
+              }
+            });
+
+            setTimeout(function () {
+              should(_nbPacketsReceivedClient1).eql(2);
+              should(_nbPacketsReceivedClient2).eql(3);
+              _client1.stop(function () {
+                _client2.stop(function () {
+                  _server.stop(done);
+                });
+              });
+            }, 50);
+          }, 50);
+        });
+      });
+
     });
   });
 });
