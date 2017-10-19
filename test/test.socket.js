@@ -621,7 +621,7 @@ describe('Socket', function () {
         });
       });
 
-      it ('should not register a client if the same uid has been already used', function (done) {
+      it ('should not register a client if the same uid has already been used', function (done) {
         const _server  = new Socket(4000, '127.0.0.1');
         const _uid     = helper.getUID();
         const _client1 = new Socket(4000, '127.0.0.1', { uid : _uid });
@@ -672,6 +672,17 @@ describe('Socket', function () {
               _server.stop(done);
             });
           });
+        });
+      });
+
+      it('should not crash if no logs', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1');
+  
+        _server.startServer(function () {
+          _server.sendFromServer(_uid, { key : 'value' });
+          _server.sendFromServer(_uid, { key : 'anotherValue' });
+          _server.stop(done);
         });
       });
 
