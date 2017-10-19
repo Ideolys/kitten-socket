@@ -563,6 +563,22 @@ describe('Socket', function () {
         });
       });
 
+      it ('should register a client', function (done) {
+        const _server = new Socket(4000, '127.0.0.1');
+        const _client = new Socket(4000, '127.0.0.1', helper.getUID());
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            should(packet.data.type).eql('REGISTER');
+            _client.stop(function() {
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
       it ('should not register a client if the same uid has been already used', function (done) {
         const _server  = new Socket(4000, '127.0.0.1');
         const _uid     = helper.getUID();
