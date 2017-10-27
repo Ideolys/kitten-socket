@@ -5,7 +5,7 @@ const Socket = require('../lib/socket');
 const should = require('should');
 const path   = require('path');
 const helper = require('../lib/helper');
-let server;
+var server;
 
 describe('Socket', function () {
 
@@ -639,6 +639,57 @@ describe('Socket', function () {
                   _server.stop(done);
                 });
               });
+            });
+          });
+        });
+      });
+
+      it ('should register a client with correct token', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', { token : _uid });
+        const _client = new Socket(4000, '127.0.0.1', { token : _uid });
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            should(packet.data.type).eql('REGISTERED');
+            _client.stop(function() {
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
+      it ('should not register a client if tokens mismatch', function (done) {
+        const _server = new Socket(4000, '127.0.0.1', { token : helper.getUID() });
+        const _client = new Socket(4000, '127.0.0.1', { token : helper.getUID() });
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            should(packet.data.type).eql('ERROR');
+            should(packet.data.message).eql('tokens mismatch!');
+            _client.stop(function() {
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
+      it ('should not register a client if token is not provided', function (done) {
+        const _server = new Socket(4000, '127.0.0.1', { token : helper.getUID() });
+        const _client = new Socket(4000, '127.0.0.1');
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            should(packet.data.type).eql('ERROR');
+            should(packet.data.message).eql('tokens mismatch!');
+            _client.stop(function() {
+              _server.stop(done);
             });
           });
         });
