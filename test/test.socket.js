@@ -799,6 +799,46 @@ describe('Socket', function () {
         });
       });
 
+      it('should write the packet to the disk if the socket is not connected and send packet to the socket when reconnecting', function (done) {
+        const _uidClient = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', { 
+          logsDirectory : 'logs', 
+          logsFilename  : 'packets.log' 
+        });
+        const _client = new Socket(4000, '127.0.0.1', { uid : _uidClient });
+        _server.startServer(function () {
+          _client.startClient(function () {
+            _server.sendFromServer(_uidClient, { key : 'value' });
+          });
+
+          _client.on('message', function (packet) {
+            if (packet.data.type === 'REGISTERED') {
+              return;
+            }
+
+            should(packet.data.key).eql('value');
+            _client.stop(function () {
+              _client.removeAllListeners('message');
+              _server.sendFromServer(_uidClient, { car : 'Tesla' });
+
+              _client.startClient(function () {
+                _client.on('message', function (packet) {
+                  if (packet.data.type === 'REGISTERED') {
+                    return;
+                  }
+
+                  should(packet.data.car).eql('Tesla');
+                  _client.stop(function () {
+                    _server.stop(done);
+                  });
+                });
+              });
+            });
+          });
+
+        });
+      });
+
       it('should send the saved packets when socket was not connected', function (done) {
         const _uid    = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1', { 
