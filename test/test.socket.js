@@ -942,10 +942,10 @@ describe('Socket', function () {
         });
       });
 
-      it('SLOW TEST should register and unregistered a client : 20 times', function (done) {
+      it('SLOW TEST should register and unregistered a client : 10 times', function (done) {
         const _server             = new Socket(4000, '127.0.0.1');
         var   _nbDisconnections   = 0;
-        var  _limitDisconnections = 20
+        var  _limitDisconnections = 10
         const _queue              = [];
 
         _server.startServer(_next);
