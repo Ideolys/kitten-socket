@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha --growl -t 10000 -b"
+    "test": "mocha --growl -t 25000 -b"
   },
   "repository": {
     "type": "git",

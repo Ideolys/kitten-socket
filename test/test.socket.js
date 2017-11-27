@@ -926,6 +926,54 @@ describe('Socket', function () {
       });
 
     });
+
+    describe('disconnection', function () {
+
+      it('should register and unregistered a client', function (done) {
+        const _server = new Socket(4000, '127.0.0.1');
+        _server.startServer(function () {
+          executeServer('client', function () {
+            should(_server._clients.length).eql(1);
+            stopServer(function () {
+              should(_server._clients.length).eql(0);
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
+      it('SLOW TEST should register and unregistered a client : 20 times', function (done) {
+        const _server             = new Socket(4000, '127.0.0.1');
+        var   _nbDisconnections   = 0;
+        var  _limitDisconnections = 20
+        const _queue              = [];
+
+        _server.startServer(_next);
+
+        function _next () {
+          _registerAndDisconnect(function () {
+            _nbDisconnections++;
+
+            if (_nbDisconnections === _limitDisconnections) {
+             return _server.stop(done);
+            }
+
+            _next();
+          });
+        }
+
+        function _registerAndDisconnect (callback) {
+          executeServer('client', function () {
+            should(_server._clients.length).eql(1);
+            stopServer(function () {
+              should(_server._clients.length).eql(0);
+              callback();
+            });
+          });
+        }
+      });
+
+    });
   });
 });
 
