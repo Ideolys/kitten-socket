@@ -927,7 +927,7 @@ describe('Socket', function () {
 
     });
 
-    describe('disconnection', function () {
+    describe.only('disconnection', function () {
 
       it('should register and unregistered a client', function (done) {
         const _server = new Socket(4000, '127.0.0.1');
@@ -938,6 +938,49 @@ describe('Socket', function () {
               should(_server._clients.length).eql(0);
               _server.stop(done);
             });
+          });
+        });
+      });
+
+      it('should register and unregistered multiple clients with error', function (done) {
+        const _server = new Socket(4000, '127.0.0.1');
+        var _client2 = new Socket(4000, '127.0.0.1', {
+          uid : 2
+        });
+        var _client3 = new Socket(4000, '127.0.0.1', {
+          uid : 3
+        });
+
+        _nbPacketsClient2 = 0;
+        _client2.on('message', function (packet) {
+          _nbPacketsClient2++;
+
+          should(packet.data.type).eql('REGISTERED');
+          if (_nbPacketsClient2 === 1) {
+            should(_server._clients.length).eql(1);
+          } else if (_nbPacketsClient2 === 2) {
+            should(_server._clients.length).eql(2);
+            
+            _client3.stop(function () {
+              _client2.stop(function () {
+                _server.stop(done);
+              });
+            });
+          }
+        });
+
+        _client3.on('message', function (packet) {
+          should(packet.data.type).eql('REGISTERED');
+          should(_server._clients.length).eql(2);
+
+          // Get _client2 & trigger error
+          _server._clients[0].socket.emit('error');
+          should(_server._clients.length).eql(1);
+        });
+
+        _server.startServer(function () {
+          _client2.startClient(function () {
+            _client3.startClient();
           });
         });
       });
