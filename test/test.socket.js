@@ -927,7 +927,7 @@ describe('Socket', function () {
 
     });
 
-    describe.only('disconnection', function () {
+    describe('disconnection', function () {
 
       it('should register and unregistered a client', function (done) {
         const _server = new Socket(4000, '127.0.0.1');
