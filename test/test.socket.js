@@ -406,8 +406,8 @@ describe('Socket', function () {
       var _privateFilename = path.join(__dirname, 'socket', 'keys', 'key.pem');
       Socket.generateKeys(_publicFilename, _privateFilename, function (err) {
         should(err+'').eql('null');
-        should(/-----BEGIN CERTIFICATE-----/.test(fs.readFileSync(_publicFilename, 'utf8'))).eql(true); 
-        should(/-----BEGIN PRIVATE KEY-----/.test(fs.readFileSync(_privateFilename, 'utf8'))).eql(true); 
+        should(/BEGIN CERTIFICATE/.test(fs.readFileSync(_publicFilename, 'utf8'))).eql(true); 
+        should(/PRIVATE KEY/.test(fs.readFileSync(_privateFilename, 'utf8'))).eql(true); 
         fs.unlinkSync(_publicFilename); // remove key
         fs.unlinkSync(_privateFilename); // remove key
         done();
@@ -701,8 +701,7 @@ describe('Socket', function () {
     describe('send', function () {
 
       beforeEach(function (done) {
-        clearPacketsLog();
-        done();
+        clearPacketsLog(done);
       });
 
       it('should send a packet if the client is connected', function (done) {
@@ -958,8 +957,8 @@ describe('Socket', function () {
           uid : 2
         });
 
-        let _packetsReceivedValuesClient1 = [];
-        let _packetsReceivedValuesClient2 = [];
+        var _packetsReceivedValuesClient1 = [];
+        var _packetsReceivedValuesClient2 = [];
 
         _server.startServer(function () {
           _server.sendFromServer(1, { key : 'value1' });
@@ -1021,8 +1020,8 @@ describe('Socket', function () {
         const _client2 = new Socket(4000, '127.0.0.1', {
           uid : 2
         });
-        let _packetsReceivedValuesClient1 = [];
-        let _packetsReceivedValuesClient2 = [];
+        var _packetsReceivedValuesClient1 = [];
+        var _packetsReceivedValuesClient2 = [];
 
         fs.writeFileSync(path.join(process.cwd(), 'logs', 'packets.log'), JSON.stringify([
           { uid : 1, data : { key : 'value1' }, date : Date.now()},
@@ -1231,7 +1230,6 @@ describe('Socket', function () {
 
       it('should timeout the socket if it is not registered', function (done) {
         const _server       = new Socket(4000, '127.0.0.1');
-        const _maxNbClients = 1000;
 
         _server.startServer();
 
@@ -1247,9 +1245,12 @@ describe('Socket', function () {
   });
 });
 
-function clearPacketsLog () {
+function clearPacketsLog (done) {
   var _file = path.join(process.cwd(), 'logs', 'packets.log');
-  fs.writeFileSync(_file, JSON.stringify([]));
+  fs.writeFile(_file, JSON.stringify([]), function(){
+    // do not throw Error if the file does not exist
+    done();
+  });
 }
 
 function executeServer (filename, callback) {
