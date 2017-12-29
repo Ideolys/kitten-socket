@@ -398,6 +398,32 @@ describe('Socket', function () {
         },400);
       });
     });
+
+    it('should not concatenate the socket buffer forever', function (done) {
+      const _uid    = helper.getUID();
+      const _server = new Socket(4000, '127.0.0.1');
+      const _client = new Socket(4000, '127.0.0.1', { uid : _uid });
+      var _otherSocket;
+
+      _server.startServer(function () {
+        _otherSocket = net.connect(4000, '127.0.0.1', function () {
+          _otherSocket.write(Buffer.from('AAAA'));
+
+          _client.on('message', function (packet) {
+            should(packet.data.type).ok();
+            should(packet.data.type).eql('REGISTERED');
+
+            _otherSocket.end();
+            _client.stop(function () {
+              _server.stop(done);
+            });
+          });
+
+          _client.startClient();
+        });
+      });
+    });
+
   });
 
   describe('client / server secure TLS connection', function () {
