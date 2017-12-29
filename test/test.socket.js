@@ -463,7 +463,7 @@ describe('Socket', function () {
         setTimeout(function () {
           should(_nbPackets).eql(3);
           _client.stop(function () {
-            stopServer(done);
+            _server.stop(done);
           });
         }, 600);
       });
