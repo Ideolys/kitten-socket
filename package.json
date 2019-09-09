@@ -16,5 +16,8 @@
   "devDependencies": {
     "should": "=13.1.2",
     "mocha": "=4.0.1"
+  },
+  "publishConfig": {
+    "registry": "https://npm.ideolys.com"
   }
 }
