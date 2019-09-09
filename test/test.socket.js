@@ -1311,7 +1311,25 @@ describe('Socket', function () {
         var _socket = net.connect(4000, '127.0.0.1');
         
         _socket.on('close', function () {
+          _server.stop(done);
+        });
+      });
+
+      it('server should be able to stop even if some client are connected', function (done) {
+        const _server = new Socket(4000, '127.0.0.1');
+        const _client = new Socket(4000, '127.0.0.1');
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            should(packet.data.type).eql('REGISTERED');
+            _server.stop(function () {
+              _client.stop(() => {
           done();
+        });
+      });
+          });
         });
       });
     
