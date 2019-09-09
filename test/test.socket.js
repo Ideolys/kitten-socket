@@ -1326,9 +1326,9 @@ describe('Socket', function () {
             should(packet.data.type).eql('REGISTERED');
             _server.stop(function () {
               _client.stop(() => {
-          done();
-        });
-      });
+                done();
+              });
+            });
           });
         });
       });
