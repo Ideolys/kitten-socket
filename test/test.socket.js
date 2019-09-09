@@ -346,7 +346,7 @@ describe('Socket', function () {
       },100);
     });
     it('should reconnect automatically the client if the server is down for a moment. It should buffer messages\
-      It must fire the error event. It mandatory to listen on error events otherwise it crashes', function (done) {
+      It must fire the warning event', function (done) {
       var _client = null; 
       var _timer = null; 
       var _sent = 0;
@@ -360,7 +360,7 @@ describe('Socket', function () {
         _sent++;
         _client.send('message for a drunk server');
       }, 5);
-      _client.on('error', function () {
+      _client.on('warning', function () {
         _nbError++;
       });
       _client.on('connect', function () {
@@ -1280,7 +1280,10 @@ describe('Socket', function () {
         _server.startServer();
 
         for (var i = 0; i < _maxNbClients; i++) {
-          net.connect(4000, '127.0.0.1');
+          var _socket = net.connect(4000, '127.0.0.1');
+          _socket.on('error',  () => {
+            console.log('socket error');
+          });
         }
 
         const _client = new Socket(4000, '127.0.0.1', {
@@ -1308,7 +1311,25 @@ describe('Socket', function () {
         var _socket = net.connect(4000, '127.0.0.1');
         
         _socket.on('close', function () {
-          done();
+          _server.stop(done);
+        });
+      });
+
+      it('server should be able to stop even if some client are connected', function (done) {
+        const _server = new Socket(4000, '127.0.0.1');
+        const _client = new Socket(4000, '127.0.0.1');
+  
+        _server.startServer(function () {
+          _client.startClient();
+  
+          _client.on('message', function (packet) {
+            should(packet.data.type).eql('REGISTERED');
+            _server.stop(function () {
+              _client.stop(() => {
+                done();
+              });
+            });
+          });
         });
       });
     
