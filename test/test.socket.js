@@ -1,7 +1,7 @@
 const assert = require('assert');
 const fs     = require('fs');
 const spawn  = require('child_process').spawn;
-const Socket = require('../lib/socket');  
+const Socket = require('../lib/socket');
 const should = require('should');
 const path   = require('path');
 const helper = require('../lib/helper');
@@ -114,7 +114,7 @@ describe('Socket', function () {
         var _nbError    = 0;
         var _nbReceived = 0;
         _client = new Socket(4000, '127.0.0.1');
-        _client.startClient(); 
+        _client.startClient();
         _client.on('error', function () {
           _nbError++;
         });
@@ -122,21 +122,21 @@ describe('Socket', function () {
           should(response.data).eql('client1server');
           _nbReceived++;
           if (_nbReceived===3) {
-            theEnd(); 
+            theEnd();
           }
         });
         _client.send('client2', function (err, response) {
           should(response.data).eql('client2server');
           _nbReceived++;
           if (_nbReceived===3) {
-            theEnd(); 
+            theEnd();
           }
         });
         _client.send('client3', function (err, response) {
           should(response.data).eql('client3server');
           _nbReceived++;
           if (_nbReceived===3) {
-            theEnd(); 
+            theEnd();
           }
         });
         function theEnd () {
@@ -163,21 +163,21 @@ describe('Socket', function () {
             should(response).eql(null);
             _nbReceived++;
             if (_nbReceived===3) {
-              theEnd(); 
+              theEnd();
             }
           });
           _client.send('client2', function (err, response) {
             should(response.data).eql('client2server');
             _nbReceived++;
             if (_nbReceived===3) {
-              theEnd(); 
+              theEnd();
             }
           });
           _client.send('client3', function (err, response) {
             should(response.data).eql('client3server');
             _nbReceived++;
             if (_nbReceived===3) {
-              theEnd(); 
+              theEnd();
             }
           });
           function theEnd () {
@@ -186,7 +186,7 @@ describe('Socket', function () {
               stopServer(done);
             });
           }
-        }); 
+        });
       });
     });
     it('should be fast', function (done) {
@@ -207,8 +207,8 @@ describe('Socket', function () {
           });
           function theEnd () {
             var _end                    = new Date();
-            var _elapsed                = (_end.getTime() - _start.getTime()); 
-            var _elapsedPerTransmission = _elapsed/_nbExecuted; 
+            var _elapsed                = (_end.getTime() - _start.getTime());
+            var _elapsedPerTransmission = _elapsed/_nbExecuted;
             console.log('\n\n Socket - Time Elapsed : '+_elapsedPerTransmission + ' ms per transmission (ping-pong) for '+_nbExecuted+' transmissions ('+_elapsed+'ms)\n\n\n');
             should((_elapsed < 2000)).eql(true);
             _client.stop(function () {
@@ -347,15 +347,15 @@ describe('Socket', function () {
     });
     it('should reconnect automatically the client if the server is down for a moment. It should buffer messages\
       It must fire the warning event', function (done) {
-      var _client = null; 
-      var _timer = null; 
+      var _client = null;
+      var _timer = null;
       var _sent = 0;
       var _nbError = 0;
       var _nbClose = 0;
       var _nbConnect = 0;
       var _nbReceived = 0;
       _client = new Socket(4000, '127.0.0.1', {timeout : 5000, reconnectInterval : 50});
-      _client.startClient();  
+      _client.startClient();
       _timer = setInterval(function () {
         _sent++;
         _client.send('message for a drunk server');
@@ -477,8 +477,8 @@ describe('Socket', function () {
       var _privateFilename = path.join(__dirname, 'socket', 'keys', 'key.pem');
       Socket.generateKeys(_publicFilename, _privateFilename, function (err) {
         should(err+'').eql('null');
-        should(/BEGIN CERTIFICATE/.test(fs.readFileSync(_publicFilename, 'utf8'))).eql(true); 
-        should(/PRIVATE KEY/.test(fs.readFileSync(_privateFilename, 'utf8'))).eql(true); 
+        should(/BEGIN CERTIFICATE/.test(fs.readFileSync(_publicFilename, 'utf8'))).eql(true);
+        should(/PRIVATE KEY/.test(fs.readFileSync(_privateFilename, 'utf8'))).eql(true);
         fs.unlinkSync(_publicFilename); // remove key
         fs.unlinkSync(_privateFilename); // remove key
         done();
@@ -657,14 +657,14 @@ describe('Socket', function () {
 
   describe('server', function () {
     describe('registration', function () {
-      
+
       it ('should register a client if no uid defined', function (done) {
         const _server = new Socket(4000, '127.0.0.1');
         const _client = new Socket(4000, '127.0.0.1');
-  
+
         _server.startServer(function () {
           _client.startClient();
-  
+
           _client.on('message', function (packet) {
             should(packet.data.type).eql('REGISTERED');
             _client.stop(function() {
@@ -678,10 +678,10 @@ describe('Socket', function () {
         const _uid    = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1');
         const _client = new Socket(4000, '127.0.0.1', { uid : _uid });
-  
+
         _server.startServer(function () {
           _client.startClient();
-  
+
           _client.on('message', function (packet) {
             should(packet.data.type).eql('REGISTERED');
             should(_server._clients.length).eql(1);
@@ -698,7 +698,7 @@ describe('Socket', function () {
         const _uid     = helper.getUID();
         const _client1 = new Socket(4000, '127.0.0.1', { uid : _uid });
         const _client2 = new Socket(4000, '127.0.0.1', { uid : _uid });
-        
+
         _server.startServer(function () {
           _client1.startClient(function () {
             _client2.startClient();
@@ -720,10 +720,10 @@ describe('Socket', function () {
         const _uid    = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1', { token : _uid });
         const _client = new Socket(4000, '127.0.0.1', { token : _uid });
-  
+
         _server.startServer(function () {
           _client.startClient();
-  
+
           _client.on('message', function (packet) {
             should(packet.data.type).eql('REGISTERED');
             _client.stop(function() {
@@ -736,10 +736,10 @@ describe('Socket', function () {
       it ('should not register a client if tokens mismatch', function (done) {
         const _server = new Socket(4000, '127.0.0.1', { token : helper.getUID() });
         const _client = new Socket(4000, '127.0.0.1', { token : helper.getUID() });
-  
+
         _server.startServer(function () {
           _client.startClient();
-  
+
           _client.on('message', function (packet) {
             should(packet.data.type).eql('ERROR');
             should(packet.data.message).eql('tokens mismatch!');
@@ -753,13 +753,72 @@ describe('Socket', function () {
       it ('should not register a client if token is not provided', function (done) {
         const _server = new Socket(4000, '127.0.0.1', { token : helper.getUID() });
         const _client = new Socket(4000, '127.0.0.1');
-  
+
         _server.startServer(function () {
           _client.startClient();
-  
+
           _client.on('message', function (packet) {
             should(packet.data.type).eql('ERROR');
             should(packet.data.message).eql('tokens mismatch!');
+            _client.stop(function() {
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
+      it('should register a client with auth function', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', {
+          token : _uid,
+          onSocketRegisterFn : (packet, client, callback) => {
+            should(packet).be.an.Object();
+            should(client).be.an.Object();
+            should(callback).be.a.Function();
+            hasBeenCalled = true;
+            callback(true);
+          }
+        });
+        const _client = new Socket(4000, '127.0.0.1', { token : _uid });
+
+        let hasBeenCalled = false;
+
+        _server.startServer(function () {
+          _client.startClient();
+
+          _client.on('message', function (packet) {
+            should(hasBeenCalled).eql(true);
+            should(packet.data.type).eql('REGISTERED');
+            _client.stop(function() {
+              _server.stop(done);
+            });
+          });
+        });
+      });
+
+      it('should not register a client with auth function', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', {
+          token : _uid,
+          onSocketRegisterFn : (packet, client, callback) => {
+            should(packet).be.an.Object();
+            should(client).be.an.Object();
+            should(callback).be.a.Function();
+            hasBeenCalled = true;
+            callback(false);
+          }
+        });
+        const _client = new Socket(4000, '127.0.0.1', { token : _uid });
+
+        let hasBeenCalled = false;
+
+        _server.startServer(function () {
+          _client.startClient();
+
+          _client.on('message', function (packet) {
+            should(hasBeenCalled).eql(true);
+            should(packet.data.type).eql('ERROR');
+            should(packet.data.message).eql('Unauthorized');
             _client.stop(function() {
               _server.stop(done);
             });
@@ -779,16 +838,16 @@ describe('Socket', function () {
         const _uid    = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1');
         const _client = new Socket(4000, '127.0.0.1', { uid : _uid });
-  
+
         _server.startServer(function () {
           _client.startClient();
-  
+
           _client.on('message', function (packet) {
             if (packet.data.type === 'REGISTERED') {
               _server.sendFromServer(_uid, { key : 'value' });
               return;
             }
-            
+
             should(packet.data.key).eql('value');
             _client.stop(function() {
               _server.stop(done);
@@ -800,7 +859,7 @@ describe('Socket', function () {
       it('should not crash if no logs', function (done) {
         const _uid    = helper.getUID();
         const _server = new Socket(4000, '127.0.0.1');
-  
+
         _server.startServer(function () {
           _server.sendFromServer(_uid, { key : 'value' });
           _server.sendFromServer(_uid, { key : 'anotherValue' });
@@ -810,12 +869,12 @@ describe('Socket', function () {
 
       it('should write the packet to the disk if the socket is not connected', function (done) {
         const _uid    = helper.getUID();
-        const _server = new Socket(4000, '127.0.0.1', { 
-          logsDirectory      : 'logs', 
+        const _server = new Socket(4000, '127.0.0.1', {
+          logsDirectory      : 'logs',
           logsFilename       : 'packets.log',
           timerSavingPackets : 200
         });
-  
+
         _server.startServer(function () {
 
           _server.sendFromServer(_uid, { key : 'value' });
@@ -824,7 +883,7 @@ describe('Socket', function () {
           setTimeout(function () {
             var _fileData = fs.readFileSync(path.join(process.cwd(), 'logs', 'packets.log'));
             _fileData     = JSON.parse(_fileData.toString());
-  
+
             should(_fileData.length).eql(2);
             should(_fileData[0].uid).eql(_uid);
             should(_fileData[0].data).eql({ key : 'value'});
@@ -833,7 +892,7 @@ describe('Socket', function () {
             should(_fileData[1].uid).eql(_uid);
             should(_fileData[1].data).eql({ key : 'anotherValue' });
             should(_fileData[1].date).lessThan(Date.now());
-          
+
             _server.stop(done);
           }, 250);
         });
@@ -842,13 +901,13 @@ describe('Socket', function () {
       it('should write the packet to the disk if the socket is not connected and send packet to the connected socket', function (done) {
         const _uid       = helper.getUID();
         const _uidClient = helper.getUID();
-        const _server = new Socket(4000, '127.0.0.1', { 
-          logsDirectory      : 'logs', 
+        const _server = new Socket(4000, '127.0.0.1', {
+          logsDirectory      : 'logs',
           logsFilename       : 'packets.log',
           timerSavingPackets : 200
         });
         const _client = new Socket(4000, '127.0.0.1', { uid : _uidClient });
-  
+
         _server.startServer(function () {
           _server.sendFromServer(_uid, { key : 'value' });
           _server.sendFromServer(_uid, { key : 'anotherValue' });
@@ -865,7 +924,7 @@ describe('Socket', function () {
 
               var _fileData = fs.readFileSync(path.join(process.cwd(), 'logs', 'packets.log'));
               _fileData     = JSON.parse(_fileData.toString());
-    
+
               should(_fileData.length).eql(2);
               should(_fileData[0].uid).eql(_uid);
               should(_fileData[0].data).eql({ key : 'value' });
@@ -874,7 +933,7 @@ describe('Socket', function () {
               should(_fileData[1].uid).eql(_uid);
               should(_fileData[1].data).eql({ key : 'anotherValue' });
               should(_fileData[1].date).lessThan(Date.now());
-              
+
               _client.stop(function () {
                 _server.stop(done);
               });
@@ -885,15 +944,15 @@ describe('Socket', function () {
 
       it('should write the packet to the disk if the socket is not connected and send packet to the socket when reconnecting', function (done) {
         const _uidClient = helper.getUID();
-        const _server    = new Socket(4000, '127.0.0.1', { 
-          logsDirectory      : 'logs', 
+        const _server    = new Socket(4000, '127.0.0.1', {
+          logsDirectory      : 'logs',
           logsFilename       : 'packets.log',
           timerSavingPackets : 200
         });
         const _client = new Socket(4000, '127.0.0.1', { uid : _uidClient });
         _server.startServer(function () {
           _client.startClient();
-          
+
           _client.on('message', function (packet) {
             if (packet.data.type === 'REGISTERED') {
               _server.sendFromServer(_uidClient, { key : 'value' });
@@ -906,7 +965,7 @@ describe('Socket', function () {
               _server.sendFromServer(_uidClient, { car : 'Tesla' });
 
               _client.startClient();
-              
+
               _client.on('message', function (packet) {
                 if (packet.data.type === 'REGISTERED') {
                   return;
@@ -925,14 +984,14 @@ describe('Socket', function () {
 
       it('should send the saved packets when socket was not connected', function (done) {
         const _uid    = helper.getUID();
-        const _server = new Socket(4000, '127.0.0.1', { 
-          logsDirectory      : 'logs', 
+        const _server = new Socket(4000, '127.0.0.1', {
+          logsDirectory      : 'logs',
           logsFilename       : 'packets.log',
           timerSavingPackets : 600
         });
         const _client          = new Socket(4000, '127.0.0.1', { uid : _uid });
         var _nbPacketsReceived = 0;
-  
+
         _server.startServer(function () {
           _server.sendFromServer(_uid, { key : 'value' });
           _server.sendFromServer(_uid, { key : 'anotherValue' });
@@ -952,7 +1011,7 @@ describe('Socket', function () {
 
                     var _fileData = fs.readFileSync(path.join(process.cwd(), 'logs', 'packets.log')).toString();
                     should(_fileData).eql('[]');
-                    
+
                     _client.stop(function () {
                       _server.stop(done);
                     });
@@ -960,7 +1019,7 @@ describe('Socket', function () {
                 }
               });
             });
-            
+
           }, 620);
         });
       });
@@ -968,14 +1027,14 @@ describe('Socket', function () {
       it('should send in the correct order the packets saved when sockets were not connected', function (done) {
         const _uidClient1 = helper.getUID();
         const _uidClient2 = helper.getUID();
-        const _server     = new Socket(4000, '127.0.0.1', { 
-          logsDirectory      : 'logs', 
+        const _server     = new Socket(4000, '127.0.0.1', {
+          logsDirectory      : 'logs',
           logsFilename       : 'packets.log',
           timerSavingPackets : 200
         });
         const _client1         = new Socket(4000, '127.0.0.1', { uid : _uidClient1 });
         const _client2         = new Socket(4000, '127.0.0.1', { uid : _uidClient2 });
-        
+
         var _nbPacketsReceivedClient1 = 0;
         var _nbPacketsReceivedClient2 = 0;
 
@@ -1015,8 +1074,8 @@ describe('Socket', function () {
       });
 
       it('should send packets to hte corret sockets with timeout packets', function (done) {
-        const _server = new Socket(4000, '127.0.0.1', { 
-          logsDirectory       : 'logs', 
+        const _server = new Socket(4000, '127.0.0.1', {
+          logsDirectory       : 'logs',
           logsFilename        : 'packets.log',
           timerSavingPackets  : 400,
           timeoutSavedPackets : 350
@@ -1045,10 +1104,10 @@ describe('Socket', function () {
             _server.sendFromServer(2, { key : 'value2' });
             _server.sendFromServer(2, { key : 'value4' });
             should(_server._queue.length).eql(3);
-            
+
             _client1.startClient();
             _client2.startClient();
-            
+
             _client1.on('message', function (packet) {
               if (packet.data.type === 'REGISTERED') {
                 return;
@@ -1081,8 +1140,8 @@ describe('Socket', function () {
 
       it('should resume saved packets at server starting and send them to clients', function (done) {
         const _uid    = helper.getUID();
-        const _server = new Socket(4000, '127.0.0.1', { 
-          logsDirectory      : 'logs', 
+        const _server = new Socket(4000, '127.0.0.1', {
+          logsDirectory      : 'logs',
           logsFilename       : 'packets.log'
         });
         const _client1 = new Socket(4000, '127.0.0.1', {
@@ -1101,7 +1160,7 @@ describe('Socket', function () {
           { uid : 1, data : { key : 'value4' }, date : Date.now()},
           { uid : 2, data : { key : 'value5' }, date : Date.now()},
         ]));
-  
+
         _server.startServer(function () {
           should(_server._queue.length).eql(5);
 
@@ -1172,7 +1231,7 @@ describe('Socket', function () {
             should(_server._clients.length).eql(1);
           } else if (_nbPacketsClient2 === 2) {
             should(_server._clients.length).eql(2);
-            
+
             _client3.stop(function () {
               _client2.stop(function () {
                 _server.stop(done);
@@ -1289,7 +1348,7 @@ describe('Socket', function () {
         const _client = new Socket(4000, '127.0.0.1', {
           uid : 3
         });
-        
+
         _client.on('message', function (packet) {
           should(packet.data.type).eql('REGISTERED');
           should(_server._clients.length).eql(1);
@@ -1298,7 +1357,7 @@ describe('Socket', function () {
             _server.stop(done);
           })
         });
-        
+
         _client.startClient();
       });
 
@@ -1307,9 +1366,9 @@ describe('Socket', function () {
 
         _server.startServer();
 
-      
+
         var _socket = net.connect(4000, '127.0.0.1');
-        
+
         _socket.on('close', function () {
           _server.stop(done);
         });
@@ -1318,10 +1377,10 @@ describe('Socket', function () {
       it('server should be able to stop even if some client are connected', function (done) {
         const _server = new Socket(4000, '127.0.0.1');
         const _client = new Socket(4000, '127.0.0.1');
-  
+
         _server.startServer(function () {
           _client.startClient();
-  
+
           _client.on('message', function (packet) {
             should(packet.data.type).eql('REGISTERED');
             _server.stop(function () {
@@ -1332,7 +1391,7 @@ describe('Socket', function () {
           });
         });
       });
-    
+
     });
   });
 });
