@@ -1,5 +1,9 @@
 # Kitten socket
 
+### v1.4.1
+*2021-06-07*
+- The server crashed if saved packets files was not containing a JSON value.
+
 ### v1.4.0
   - Add option `onSocketRegisterFn` for socket server.
 

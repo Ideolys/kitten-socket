@@ -428,7 +428,7 @@ describe('Socket', function () {
       const _uid     = helper.getUID();
       const _server  = new Socket(4000, '127.0.0.1');
       const _client  = new Socket(4000, '127.0.0.1', { uid : _uid });
-      var _nbPackets = 0; 
+      var _nbPackets = 0;
 
       _server.on('message', function (packet) {
         packet.send(packet.data);
@@ -1193,6 +1193,31 @@ describe('Socket', function () {
             })
           }, 100);
 
+        });
+      });
+
+      it('should not crash if packets file is not JSON', function (done) {
+        const _uid    = helper.getUID();
+        const _server = new Socket(4000, '127.0.0.1', {
+          logsDirectory      : 'logs',
+          logsFilename       : 'packets.log'
+        });
+        const _client1 = new Socket(4000, '127.0.0.1', {
+          uid : 1
+        });
+
+        fs.writeFileSync(path.join(process.cwd(), 'logs', 'packets.log'), '');
+
+        _server.startServer(function () {
+          should(_server._queue.length).eql(0);
+
+          _client1.startClient();
+
+          _client1.on('message', function (packet) {
+            _client1.stop(function () {
+              _server.stop(done);
+            });
+          });
         });
       });
 
