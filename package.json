@@ -1,6 +1,6 @@
 {
   "name": "kitten-socket",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Socket made by kittens",
   "main": "lib/socket.js",
   "directories": {
