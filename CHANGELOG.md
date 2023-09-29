@@ -1,7 +1,7 @@
 # Kitten socket
 
-### v1.4.3
-*2023-08-xx*
+### v1.4.4
+*2023-09-29*
 - Activation of tcp keepAlive on server-side sockets
 
 ### v1.4.2
