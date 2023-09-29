@@ -1,5 +1,9 @@
 # Kitten socket
 
+### v1.4.3
+*2023-08-xx*
+- Activation of tcp keepAlive on server-side sockets
+
 ### v1.4.2
 *2022-04-22*
 - Clear the client's socket timeout on disconnect
